@@ -1,49 +1,70 @@
 #include <Servo.h>
-#define SERVO 23
-#define BUZZER 25
+#define SERVO 9
+#define BUZZER 29
+#define BOTONSERVO 23
 Servo servoMotor;
+long tiempoSubida = 0;
+long tiempoBuzzer=0;
+bool sube = false;
+bool regreso = true;
+bool prenderBuzzer = false;
 void setup() {
-  //pinMode(SERVO, OUTPUT);
-  //digitalWrite(SERVO, LOW);
-  //pinMode(BUZZER, OUTPUT);
-  // Iniciamos el monitor serie para mostrar el resultado
+
   Serial.begin(9600);
   pinMode(25, OUTPUT);
   pinMode(27, OUTPUT);
-  digitalWrite(25, HIGH);
-  // Iniciamos el servo para que empiece a trabajar con el pin 9
+  pinMode(BOTONSERVO, INPUT);
+  pinMode(BUZZER, OUTPUT);
+
   servoMotor.attach(SERVO);
 
-  // Inicializamos al ángulo 0 el servomotor
   servoMotor.write(0);
 }
 
 void loop() {
-  /*servoMotor.write(720);
-    delay(3000);
-    servoMotor.write(-720);
-
-  */
-  digitalWrite(27, HIGH);
-  digitalWrite(25, LOW);
-  for (int i = 0; i <= 359; i++)
-  {
-    // Desplazamos al ángulo correspondiente
-    servoMotor.write(i);
-    // Hacemos una pausa de 25ms
-    delay(20);
-  }
- //delay(3000);
-  digitalWrite(25, HIGH);
-  digitalWrite(27, LOW);
-  // Para el sentido negativo
-  for (int i = 359; i >= 0; i--)
-  {
-    // Desplazamos al ángulo correspondiente
-    servoMotor.write(i);
-    // Hacemos una pausa de 25ms
-    delay(20);
+  int leer = digitalRead(BOTONSERVO);
+  if (!regreso && leer != 1) {
+    sube = true;
   }
 
-  //delay(3000);
+  if (leer == 1 && regreso) {
+    for (int i = 0; i <= 359; i++)
+    {
+      servoMotor.write(i);
+    }
+    tiempoSubida = millis();
+
+    regreso = false;
+    digitalWrite(27, HIGH);
+    digitalWrite(25, LOW);
+  }
+
+  if (millis() - tiempoSubida > 6000 || leer == 1 && sube) {
+
+    for (int i = 359; i >= 0; i--)
+    {
+      servoMotor.write(i);
+    }
+    prenderBuzzer = true;
+   regreso = false;
+  }
+
+  if(prenderBuzzer && servoMotor.read()==0){
+     tiempoBuzzer = millis();
+    digitalWrite(BUZZER, HIGH);
+    digitalWrite(25, HIGH);
+    digitalWrite(27, LOW);
+    sube = false;
+    regreso = false;
+    prenderBuzzer = false;
+  }
+
+ if (millis() - tiempoBuzzer > 3000) {
+    digitalWrite(BUZZER, LOW);
+    digitalWrite(25, LOW);
+    digitalWrite(27, LOW);
+    tiempoSubida = 0;
+    tiempoBuzzer = 0;
+    regreso = true;
+  }
 }
