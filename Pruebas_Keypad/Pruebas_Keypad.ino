@@ -1,5 +1,6 @@
 #include <Keypad.h>
 #include <LiquidCrystal.h>
+#include <EEPROM.h>
 
 int pos = 0; // LCD Connections
 LiquidCrystal lcd(A0, A1, A2, A3, A4, A5);
@@ -20,11 +21,22 @@ char pass[4] = {'\0', '\0', '\0', '\0'};
 int currentposition = 0;
 int invalidcount = 12;
 
+/*
+   Struct que representa un usuario en el sistema
+*/
+struct user {
+  char id[4];
+  char password[8];
+};
+
 void setup()
 {
-  displayscreen();
   Serial.begin(9600);
+  displayscreen();
   lcd.begin(16, 2);
+  Serial.println("Reconocio basura");
+
+  //Serial.println(EEPROM[0]);
 }
 
 void loop()
@@ -52,10 +64,10 @@ void loop()
     if (currentposition == 4)
     {
       // Área para verificar si pertenece a la matriz.
-      if(verificarPass())
+      if (verificarPass())
       {
         correct();
-        invalidcount = 0; 
+        invalidcount = 0;
       }
       else
       {
@@ -69,6 +81,7 @@ void loop()
 
 void incorrect()
 {
+  memset(pass, '\0', 4);
   lcd.clear();
   lcd.setCursor(1, 0);
   lcd.print("PASS");
@@ -99,4 +112,13 @@ void displayscreen()
 {
   lcd.setCursor(0, 0);
   lcd.println("*BIENVENIDO*");
+}
+
+bool verificarPass() {
+  for (int i = 0; i < 4; i++) {
+    if (pass[i] != password[i]) {
+      return false;
+    }
+  }
+  return true;
 }
