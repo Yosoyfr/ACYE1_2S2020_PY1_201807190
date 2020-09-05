@@ -34,6 +34,51 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
 String text;
 
+byte candado[8] = {
+  B01110,
+  B10001,
+  B10001,
+  B10001,
+  B11111,
+  B11011,
+  B11111,
+  B11111
+};
+
+byte carita[8] = {
+  B01010,
+  B01010,
+  B01010,
+  B00000,
+  B10001,
+  B10001,
+  B01110,
+  B00000
+};
+
+byte ampersand[8] = {
+  B01110,
+  B10001,
+  B01010,
+  B00100,
+  B01110,
+  B10011,
+  B01101,
+  B00000
+
+};
+
+byte check[8] = {
+  B00000,
+  B00000,
+  B00001,
+  B00010,
+  B10100,
+  B01000,
+  B00000,
+  B00000
+};
+
 void setup() {
   //Stepper 1
   pinMode(lb1A, OUTPUT);
@@ -74,6 +119,10 @@ void setup() {
   direccion = 0;
 
   Serial.begin(9600);
+
+  /*lcd.createChar(0, check);
+  lcd.begin(16, 2);
+  lcd.write((byte)0);*/
 }
 
 void loop() {
@@ -117,7 +166,7 @@ void loop() {
         bandamsg(2, "2");
       }
       //digitalRead(LB2M)
-    } else if (text == "send2") { //mandar de lab 2 a lab 1
+    } else if (text == "sendlab 2") { //mandar de lab 2 a lab 1
       int carga1 = digitalRead(CLAB1);
       int carga2 = digitalRead(CLAB2);
       if (carga1 == 0 && carga2 == 0) {
