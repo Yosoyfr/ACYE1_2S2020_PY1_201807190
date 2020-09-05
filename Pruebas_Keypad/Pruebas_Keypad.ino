@@ -24,10 +24,10 @@ int invalidcount = 12;
 /*
    Struct que representa un usuario en el sistema
 */
-struct user {
-  char id[4];
-  char password[8];
-};
+typedef struct  {
+  int id;  
+  long password;   
+} User;
 
 void setup()
 {
@@ -39,37 +39,38 @@ void setup()
   int a = 0;
   EEPROM.put(0, a);
 
-  char id[]= "1234";
-  char contra[] = "12345678";
-  
+  User usuario1 ={4444, 88888888};
+  User usuario2 ={1234, 12345678};
+  EEPROM.put(0,usuario1);
+  EEPROM.put(8,usuario2);
+  User us1;
+  User us2;
+  EEPROM.get(0, us1);
+  Serial.println(us1.id);
+  Serial.println(us1.password);//NICE
+  Serial.println(sizeof(us1));
+  Serial.println("......Cisco hueco......");
 
-  user usuario1 = {"1234","12345678"};
-  Serial.println(usuario1.id);
-  Serial.println(usuario1.password);
+  EEPROM.get(8, us2);
+  Serial.println(us2.id);
+  Serial.println(us2.password);//NICE
+  Serial.println(sizeof(us2));
   //addUser(usuario1);
 
-  Serial.println(contadorUsuarios());
+  
+  //Serial.println(contadorUsuarios());
 
-  int address = 2;
-  for (int i = 0 ; i < contadorUsuarios() ; ++i) {
-    user usuario;
-    EEPROM.get(address, usuario);
-    Serial.print("ID: ");
-    Serial.print(usuario.id);
-    Serial.print(" Contrasenia: ");
-    Serial.println(usuario.password);
-
-    address += sizeof(user);
-  }
-  /*
-    for (int i = 0 ; i < EEPROM.length()  ; ++i) {
-      Serial.print("EEPROM Data: ");
-      Serial.print(i);
-      Serial.print(" Value: ");
-
-      Serial.println(EEPROM[i]);
-    }
-  */
+//  int address = 2;
+//  for (int i = 0 ; i < contadorUsuarios() ; ++i) {
+//    User usuario;
+//    EEPROM.get(address, usuario);
+//    Serial.print("ID: ");
+//    Serial.print(usuario.color);
+//    Serial.print(" Contrasenia: ");
+//    Serial.println(usuario.name);
+//
+//    address += sizeof(User);
+//  }
 }
 
 void loop()
@@ -153,27 +154,27 @@ void correct()
   displayscreen();
 }
 
-/*
-   Metodo que recupera el numero de usuarios registrados en el sistema
-   de la memeria EEPROM del arduino, la cual serian las primeras dos posiciones
-*/
-int contadorUsuarios() {
-  int nUsuarios;
-  EEPROM.get(0, nUsuarios);
-  return nUsuarios;
-}
-/*
-   Metodo para insertar un nuevo usuario del sistema a la memoria EEPROM
-*/
-void addUser(user usuario) {
-  //Ingresamos el nuevo usuario
-  int nUsuarios = contadorUsuarios();
-  int index = nUsuarios * sizeof(user) + 2;
-  EEPROM.put(index, usuario);
-  //Aumentamos el contador de usuarios
-  nUsuarios++;
-  EEPROM.put(0, nUsuarios);
-}
+///*
+//   Metodo que recupera el numero de usuarios registrados en el sistema
+//   de la memeria EEPROM del arduino, la cual serian las primeras dos posiciones
+//*/
+//int contadorUsuarios() {
+//  int nUsuarios;
+//  EEPROM.get(0, nUsuarios);
+//  return nUsuarios;
+//}
+///*
+//   Metodo para insertar un nuevo usuario del sistema a la memoria EEPROM
+//*/
+//void addUser(User usuario) {
+//  //Ingresamos el nuevo usuario
+//  int nUsuarios = contadorUsuarios();
+//  int index = nUsuarios * sizeof(User) + 2;
+//  EEPROM.put(index, usuario);
+//  //Aumentamos el contador de usuarios
+//  nUsuarios++;
+//  EEPROM.put(0, nUsuarios);
+//}
 
 
 void displayscreen()
