@@ -1,5 +1,17 @@
 #include <LiquidCrystal.h>
 
+#include <Servo.h>
+#define SERVO 53
+#define BUZZER 29
+#define BOTONSERVO 23
+#define BOTONCERRAR 33
+Servo servoMotor;
+long tiempoSubida;
+bool sube = false;
+bool regreso = true;
+bool ejecuto;
+bool buzzer = false;
+
 #define lb1A 22
 #define lb1B 24
 #define lb1C 26
@@ -115,17 +127,29 @@ void setup() {
   pinMode(SD2, OUTPUT);
   pinMode(SD3, OUTPUT);
   pinMode(SD4, OUTPUT);
+  pinMode(25, OUTPUT);
+  pinMode(27, OUTPUT);
+
+  pinMode(BOTONSERVO, INPUT);
+  pinMode(BOTONCERRAR, INPUT);
+  pinMode(BUZZER, OUTPUT);
+
+  servoMotor.attach(SERVO);
+
+  servoMotor.write(0);
+  ejecuto = false;
 
   direccion = 0;
 
   Serial.begin(9600);
 
   /*lcd.createChar(0, check);
-  lcd.begin(16, 2);
-  lcd.write((byte)0);*/
+    lcd.begin(16, 2);
+    lcd.write((byte)0);*/
 }
 
 void loop() {
+  porton();
   while (Serial.available()) {
     delay(10);
     char c = Serial.read();
@@ -166,7 +190,7 @@ void loop() {
         bandamsg(2, "2");
       }
       //digitalRead(LB2M)
-    } else if (text == "sendlab 2") { //mandar de lab 2 a lab 1
+    } else if (text == "sendlab2") { //mandar de lab 2 a lab 1
       int carga1 = digitalRead(CLAB1);
       int carga2 = digitalRead(CLAB2);
       if (carga1 == 0 && carga2 == 0) {
@@ -200,7 +224,7 @@ void loop() {
     } else {
       //no se hace nada
     }
-    text ="";
+    text = "";
   }
 
 
@@ -296,5 +320,50 @@ void motores_banda() {
     digitalWrite(SD1, LOW); digitalWrite(SD2, LOW); digitalWrite(SD3, LOW); digitalWrite(SD4, HIGH);
     digitalWrite(SI1, LOW); digitalWrite(SI2, LOW); digitalWrite(SI3, LOW); digitalWrite(SI4, HIGH);
     delay(150);
+  }
+}
+
+
+void porton() {
+  int leer = digitalRead(BOTONSERVO);
+
+  if (leer == 1) {
+    for (int i = 0; i <= 359; i++)
+    {
+      servoMotor.write(i);
+    }
+    ejecuto = true;
+
+    digitalWrite(27, HIGH);
+    digitalWrite(25, LOW);
+  }
+
+  if (ejecuto) {
+    bool boton = false;
+    tiempoSubida = millis();
+
+    while (millis() - tiempoSubida < 7000 &&  boton == false) {
+      boton = digitalRead(BOTONCERRAR);
+      if (boton == 1) {
+        break;
+      }
+    }
+
+
+    for (int i = 359; i >= 0; i--)
+    {
+      servoMotor.write(i);
+    }
+    delay(3000);
+    long tiempoBuzzer = millis();
+    ejecuto = false;
+    while (millis() - tiempoBuzzer < 3000) {
+      digitalWrite(BUZZER, HIGH);
+      digitalWrite(25, HIGH);
+      digitalWrite(27, LOW);
+    }
+    digitalWrite(BUZZER, LOW);
+    digitalWrite(25, LOW);
+    digitalWrite(27, LOW);
   }
 }
