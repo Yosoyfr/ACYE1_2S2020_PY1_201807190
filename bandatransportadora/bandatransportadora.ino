@@ -32,6 +32,8 @@ int direccion;
 const int rs = 43, en = 45, d4 = 46, d5 = 48, d6 = 50, d7 = 52;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
+String text;
+
 void setup() {
   //Stepper 1
   pinMode(lb1A, OUTPUT);
@@ -59,8 +61,6 @@ void setup() {
   lcd.setCursor(0, 1);
   lcd.print("Grupo 19 ");
 
-  Serial.begin(9600);
-
   pinMode(SI1, OUTPUT);
   pinMode(SI2, OUTPUT);
   pinMode(SI3, OUTPUT);
@@ -72,75 +72,89 @@ void setup() {
   pinMode(SD4, OUTPUT);
 
   direccion = 0;
+
+  Serial.begin(9600);
 }
 
 void loop() {
-
-  if (digitalRead(LB1M) == 1) { //mandar de lab 1 a lab 2
-    int carga1 = digitalRead(CLAB1);
-    int carga2 = digitalRead(CLAB2);
-    if (carga1 == 0 && carga2 == 0) {
-      //avisar que no hay carga en lab1
-      bandamsg(1, "1");
-    } else if (carga1 == 0 && carga2 == 1) {
-      //avisar que no hay carga en lab1
-      bandamsg(1, "1");
-    } else if (carga1 == 1 && carga2 == 0) {
-      //mandar
-      bandamsg(3, "no importa");
-      direccion = 0;
-      bool sigue = true;
-      while (sigue) {
-        if (digitalRead(CLAB1) == 0 ) {
-          if (digitalRead(CLAB2) == 1) {
-            sigue =  false;
-          } else {
-            sigue =  true;
-          }
-        } else {
-          sigue =  true;
-        }
-        motores_banda();
-      }
-      bandamsg(4, "no importa");
-    } else if (carga1 == 1 && carga2 == 1) {
-      //avisar que hay carga en lab2
-      bandamsg(2, "2");
-    }
-  } else if (digitalRead(LB2M) == 1) { //mandar de lab 2 a lab 1
-    int carga1 = digitalRead(CLAB1);
-    int carga2 = digitalRead(CLAB2);
-    if (carga1 == 0 && carga2 == 0) {
-      //avisar que no hay carga en lab2
-      bandamsg(1, "2");
-    } else if (carga1 == 0 && carga2 == 1) {
-      //mandar
-      bandamsg(5, "no importa");
-      direccion = 1;
-      bool sigue = true;
-      while (sigue) {
-        if (digitalRead(CLAB1) == 1 ) {
-          if (digitalRead(CLAB2) == 0) {
-            sigue =  false;
-          } else {
-            sigue =  true;
-          }
-        } else {
-          sigue =  true;
-        }
-        motores_banda();
-      }
-      bandamsg(6, "no importa");
-    } else if (carga1 == 1 && carga2 == 0) {
-      //avisar que no hay carga en lab2
-      bandamsg(1, "2");
-    } else if (carga1 == 1 && carga2 == 1) {
-      //avisar que hay carga en lab1
-      bandamsg(2, "1");
-    }
-  } else {
-    //no se hace nada
+  while (Serial.available()) {
+    delay(10);
+    char c = Serial.read();
+    text += c;
   }
+
+  if (text.length() > 0) {
+    //digitalRead(LB1M)
+    if (text == "send1") { //mandar de lab 1 a lab 2
+      int carga1 = digitalRead(CLAB1);
+      int carga2 = digitalRead(CLAB2);
+      if (carga1 == 0 && carga2 == 0) {
+        //avisar que no hay carga en lab1
+        bandamsg(1, "1");
+      } else if (carga1 == 0 && carga2 == 1) {
+        //avisar que no hay carga en lab1
+        bandamsg(1, "1");
+      } else if (carga1 == 1 && carga2 == 0) {
+        //mandar
+        bandamsg(3, "no importa");
+        direccion = 0;
+        bool sigue = true;
+        while (sigue) {
+          if (digitalRead(CLAB1) == 0 ) {
+            if (digitalRead(CLAB2) == 1) {
+              sigue =  false;
+            } else {
+              sigue =  true;
+            }
+          } else {
+            sigue =  true;
+          }
+          motores_banda();
+        }
+        bandamsg(4, "no importa");
+      } else if (carga1 == 1 && carga2 == 1) {
+        //avisar que hay carga en lab2
+        bandamsg(2, "2");
+      }
+      //digitalRead(LB2M)
+    } else if (text == "send2") { //mandar de lab 2 a lab 1
+      int carga1 = digitalRead(CLAB1);
+      int carga2 = digitalRead(CLAB2);
+      if (carga1 == 0 && carga2 == 0) {
+        //avisar que no hay carga en lab2
+        bandamsg(1, "2");
+      } else if (carga1 == 0 && carga2 == 1) {
+        //mandar
+        bandamsg(5, "no importa");
+        direccion = 1;
+        bool sigue = true;
+        while (sigue) {
+          if (digitalRead(CLAB1) == 1 ) {
+            if (digitalRead(CLAB2) == 0) {
+              sigue =  false;
+            } else {
+              sigue =  true;
+            }
+          } else {
+            sigue =  true;
+          }
+          motores_banda();
+        }
+        bandamsg(6, "no importa");
+      } else if (carga1 == 1 && carga2 == 0) {
+        //avisar que no hay carga en lab2
+        bandamsg(1, "2");
+      } else if (carga1 == 1 && carga2 == 1) {
+        //avisar que hay carga en lab1
+        bandamsg(2, "1");
+      }
+    } else {
+      //no se hace nada
+    }
+    text ="";
+  }
+
+
 }
 
 void bandamsg(int c, String op) {
