@@ -32,10 +32,11 @@ typedef struct  {
 void setup()
 {
   Serial.begin(9600);
+  //Configuracion de la pantalla LCD
   displayscreen();
   lcd.begin(16, 2);
-
-  EEPROM.put(0, 0);
+  //Configuracion de un boton reset system
+  pinMode(13, INPUT);
 }
 
 void loop()
@@ -82,6 +83,11 @@ void loop()
       }
       currentposition = 0;
     }
+  }
+  //Resetea el sistema de usuarios completamente
+  if(digitalRead(13)){
+    Serial.println("Restaurando el sistema");
+    clearEEPROM();
   }
 }
 
