@@ -39,6 +39,7 @@ void setup()
   lcd.begin(16, 2);
   //Configuracion de un boton reset system
   pinMode(13, INPUT);
+  showUsers();
 }
 
 void loop()
@@ -84,8 +85,8 @@ void loop()
         incorrect();
       }
       currentposition = 0;
-      strcpy(uss,"");
-      strcpy(pass,"");
+      memset (uss, '\0', 4);
+      memset (pass, '\0', 8);
     }
   }
   //Resetea el sistema de usuarios completamente
@@ -117,7 +118,7 @@ void incorrect()
   lcd.print("INCORRECTO");
   lcd.setCursor(15, 1);
   lcd.println(" ");
-  delay(200);
+  delay(2000);
   lcd.clear();
   displayscreen();
 }
@@ -131,7 +132,7 @@ void correct()
   lcd.print("CORRECTO");
   lcd.setCursor(15, 1);
   lcd.println(" ");
-  delay(200);
+  delay(2000);
   lcd.clear();
   displayscreen();
 }
@@ -167,21 +168,21 @@ void displayscreen()
 
 bool verificarPass() {
   lcd.clear();
-  lcd.setCursor(0,0);
+  lcd.setCursor(0, 0);
   lcd.println("PASSWORD:");
-  lcd.setCursor(0,1);
+  lcd.setCursor(0, 1);
   int passC = 0;
   while (true)
   {
     char code = keypad.getKey();
     if (code != NO_KEY)
     {
-      if(code != 'E')
+      if (code != 'E')
       {
-        pass[passC] = code;
-        lcd.print(code);      
+        pass[passC++] = code;
+        lcd.print(code);
       }
-      else if(passC >= 8)
+      else if (passC >= 8)
       {
         break;
       }
@@ -191,15 +192,42 @@ bool verificarPass() {
       }
     }
   }
-  delay(2000);
+  delay(2000);  
+  return usersLogin(String(uss).toInt(), atol(pass));
+}
 
-  //Aquí para abajo metés lo tuyo cara de culo hedeondo.
-  for (int i = 0; i < 4; i++) {
-    if (pass[i] != password[i]) {
-      return false;
+/*
+   Metodo para verificar el log correcto de un usuario
+*/
+bool usersLogin(int id, long password) {
+  int address = 2;
+  for (int i = 0 ; i < contadorUsuarios() ; ++i) {
+    User user;
+    EEPROM.get(address, user);
+    if (user.id == id && user.password == password) {
+      Serial.println("Usuario encontrado");
+      return true;
     }
+    address += sizeof(User);
   }
-  return true;
+  Serial.println("Usuario no encontrado");
+  return false;
+}
+
+/*
+   Metodo para mostrar todos los usuarios en el sistema guardados en la EEPROM
+*/
+void showUsers() {
+  int address = 2;
+  for (int i = 0 ; i < contadorUsuarios() ; ++i) {
+    User user;
+    EEPROM.get(address, user);
+    Serial.print("ID: ");
+    Serial.print(user.id);
+    Serial.print(" Password: ");
+    Serial.println(user.password);
+    address += sizeof(User);
+  }
 }
 
 void addNewUser()
@@ -283,7 +311,7 @@ void addNewUser()
             delay(2000);
 
             //Agregarlo a la EEPROM
-            User newUser = {(int)newCode, (long)newPass};
+            User newUser = {(int)newCode, atol(newPass)};
             addUser(newUser);
           }
           else
