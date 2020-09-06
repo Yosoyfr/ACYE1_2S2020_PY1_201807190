@@ -15,11 +15,13 @@ char key[rows][cols] = {
 byte rowPins[rows] = {5, 4, 3, 2};
 byte colPins[cols] = {8, 7, 6};
 Keypad keypad = Keypad(makeKeymap(key), rowPins, colPins, rows, cols);
-char* password = "0106"; //Esta variable será util para ver si el jefe autoriza la operación.
+char* password[8]; //Esta variable será util para ver si el jefe autoriza la operación.
+char* bPassword = "0106";
 char uss[4] = {'\0', '\0', '\0', '\0'};
 char pass[8] = {'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0'};
 int currentposition = 0;
 int invalidcount = 12;
+bool passInput = false, usrInput = true;
 
 /*
    Struct que representa un usuario en el sistema
@@ -53,21 +55,21 @@ void loop()
     {
       lcd.clear();
       lcd.setCursor(0, 0);
-      lcd.print("PASSWORD:");
+      lcd.print("USUARIO:");
       lcd.setCursor(7, 1);
       lcd.print(" ");
       lcd.setCursor(7, 1);
-      pass[currentposition] = code;
+      uss[currentposition] = code;
       for (l = 0; l <= currentposition; ++l)
       {
-        lcd.print(pass[l]);
+        lcd.print(uss[l]);
       }
       ++currentposition;
     }
     else
     {
       // Área para verificar si pertenece a la matriz.
-      if (strncmp(pass, "0000", 4 ) == 0)
+      if (strncmp(uss, "0000", 4 ) == 0)
       {
         addNewUser();
       }
@@ -82,10 +84,12 @@ void loop()
         incorrect();
       }
       currentposition = 0;
+      strcpy(uss,"");
+      strcpy(pass,"");
     }
   }
   //Resetea el sistema de usuarios completamente
-  if(digitalRead(13)){
+  if (digitalRead(13)) {
     Serial.println("Restaurando el sistema");
     clearEEPROM();
   }
@@ -162,6 +166,34 @@ void displayscreen()
 }
 
 bool verificarPass() {
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.println("PASSWORD:");
+  lcd.setCursor(0,1);
+  int passC = 0;
+  while (true)
+  {
+    char code = keypad.getKey();
+    if (code != NO_KEY)
+    {
+      if(code != 'E')
+      {
+        pass[passC] = code;
+        lcd.print(code);      
+      }
+      else if(passC >= 8)
+      {
+        break;
+      }
+      else
+      {
+        break;
+      }
+    }
+  }
+  delay(2000);
+
+  //Aquí para abajo metés lo tuyo cara de culo hedeondo.
   for (int i = 0; i < 4; i++) {
     if (pass[i] != password[i]) {
       return false;
@@ -224,7 +256,7 @@ void addNewUser()
               confirmCount++;
             }
           }
-          bool autorized = (strncmp(bossPass, password, 4) == 0);
+          bool autorized = (strncmp(bossPass, bPassword, 4) == 0);
 
           if (autorized)
           {
@@ -232,7 +264,7 @@ void addNewUser()
             lcd.setCursor(0, 0);
             lcd.print("AUTORIZADA");
             delay(2000);
-            
+
             //Imprimir nuevo codigo de usuario
             lcd.clear();
             lcd.setCursor(0, 0);
@@ -249,7 +281,7 @@ void addNewUser()
             lcd.setCursor(0, 1);
             lcd.println(String(newPass));
             delay(2000);
-            
+
             //Agregarlo a la EEPROM
             User newUser = {(int)newCode, (long)newPass};
             addUser(newUser);
