@@ -15,8 +15,8 @@ char key[rows][cols] = {
 byte rowPins[rows] = {5, 4, 3, 2};
 byte colPins[cols] = {8, 7, 6};
 Keypad keypad = Keypad(makeKeymap(key), rowPins, colPins, rows, cols);
-char* password[8]; //Esta variable será util para ver si el jefe autoriza la operación.
-char* bPassword = "0106";
+char* password[8]; 
+char* bPassword = "0106";//Esta variable será util para ver si el jefe autoriza la operación.
 char uss[4] = {'\0', '\0', '\0', '\0'};
 char pass[8] = {'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0'};
 int currentposition = 0;
