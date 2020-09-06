@@ -5,6 +5,8 @@
 #define BUZZER 29
 #define BOTONSERVO 23
 #define BOTONCERRAR 33
+#define LEDAMA 25
+#define LEDROJ 27
 Servo servoMotor;
 long tiempoSubida;
 bool sube = false;
@@ -38,6 +40,12 @@ bool buzzer = false;
 #define SD2 32
 #define SD3 34
 #define SD4 36
+
+#define LEDLAB1 44
+#define LEDLAB2 41
+#define LEDLAB3 39
+#define LEDLAB4 37
+
 int direccion;
 
 //pantalla lcd
@@ -127,8 +135,9 @@ void setup() {
   pinMode(SD2, OUTPUT);
   pinMode(SD3, OUTPUT);
   pinMode(SD4, OUTPUT);
-  pinMode(25, OUTPUT);
-  pinMode(27, OUTPUT);
+  pinMode(LEDAMA, OUTPUT);
+  pinMode(LEDROJ, OUTPUT);
+
 
   pinMode(BOTONSERVO, INPUT);
   pinMode(BOTONCERRAR, INPUT);
@@ -149,7 +158,7 @@ void setup() {
 }
 
 void loop() {
-  porton();
+
   while (Serial.available()) {
     delay(10);
     char c = Serial.read();
@@ -158,7 +167,7 @@ void loop() {
 
   if (text.length() > 0) {
     //digitalRead(LB1M)
-    if (text == "send1") { //mandar de lab 1 a lab 2
+    if (text == "sendlab1") { //mandar de lab 1 a lab 2
       int carga1 = digitalRead(CLAB1);
       int carga2 = digitalRead(CLAB2);
       if (carga1 == 0 && carga2 == 0) {
@@ -221,10 +230,14 @@ void loop() {
         //avisar que hay carga en lab1
         bandamsg(2, "1");
       }
-    } else {
+    } else if (text == "pon" || text == "poff") {
+      porton(text);
+    }
+    else {
       //no se hace nada
     }
     text = "";
+
   }
 
 
@@ -324,26 +337,31 @@ void motores_banda() {
 }
 
 
-void porton() {
+void porton(String text) {
   int leer = digitalRead(BOTONSERVO);
 
-  if (leer == 1) {
+  if (text == "pon") {
     for (int i = 0; i <= 359; i++)
     {
       servoMotor.write(i);
     }
     ejecuto = true;
 
-    digitalWrite(27, HIGH);
-    digitalWrite(25, LOW);
+    digitalWrite(LEDROJ, HIGH);
+    digitalWrite(LEDAMA, LOW);
   }
 
   if (ejecuto) {
     bool boton = false;
     tiempoSubida = millis();
 
-    while (millis() - tiempoSubida < 7000 &&  boton == false) {
-      boton = digitalRead(BOTONCERRAR);
+    while (millis() - tiempoSubida < 7000 &&  text != "poff") {
+      text ="";
+      while (Serial.available()) {
+        delay(10);
+        char c = Serial.read();
+        text += c;
+      }
       if (boton == 1) {
         break;
       }
@@ -359,11 +377,11 @@ void porton() {
     ejecuto = false;
     while (millis() - tiempoBuzzer < 3000) {
       digitalWrite(BUZZER, HIGH);
-      digitalWrite(25, HIGH);
-      digitalWrite(27, LOW);
+      digitalWrite(LEDAMA, HIGH);
+      digitalWrite(LEDROJ, LOW);
     }
     digitalWrite(BUZZER, LOW);
-    digitalWrite(25, LOW);
-    digitalWrite(27, LOW);
+    digitalWrite(LEDAMA, LOW);
+    digitalWrite(LEDROJ, LOW);
   }
 }
