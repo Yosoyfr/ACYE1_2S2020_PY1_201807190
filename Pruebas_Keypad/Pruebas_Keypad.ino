@@ -15,9 +15,9 @@ char key[rows][cols] = {
 byte rowPins[rows] = {5, 4, 3, 2};
 byte colPins[cols] = {8, 7, 6};
 Keypad keypad = Keypad(makeKeymap(key), rowPins, colPins, rows, cols);
-char* password = "4567";
-char pass[4] = {'\0', '\0', '\0', '\0'};
-
+char* password = "0106"; //Esta variable será util para ver si el jefe autoriza la operación.
+char uss[4] = {'\0', '\0', '\0', '\0'};
+char pass[8] = {'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0'};
 int currentposition = 0;
 int invalidcount = 12;
 
@@ -25,8 +25,8 @@ int invalidcount = 12;
    Struct que representa un usuario en el sistema
 */
 typedef struct  {
-  int id;  
-  long password;   
+  int id;
+  long password;
 } User;
 
 void setup()
@@ -34,43 +34,8 @@ void setup()
   Serial.begin(9600);
   displayscreen();
   lcd.begin(16, 2);
-  //clearEEPROM();
 
-  int a = 0;
-  EEPROM.put(0, a);
-
-  User usuario1 ={4444, 88888888};
-  User usuario2 ={1234, 12345678};
-  EEPROM.put(0,usuario1);
-  EEPROM.put(8,usuario2);
-  User us1;
-  User us2;
-  EEPROM.get(0, us1);
-  Serial.println(us1.id);
-  Serial.println(us1.password);//NICE
-  Serial.println(sizeof(us1));
-  Serial.println("......Cisco hueco......");
-
-  EEPROM.get(8, us2);
-  Serial.println(us2.id);
-  Serial.println(us2.password);//NICE
-  Serial.println(sizeof(us2));
-  //addUser(usuario1);
-
-  
-  //Serial.println(contadorUsuarios());
-
-//  int address = 2;
-//  for (int i = 0 ; i < contadorUsuarios() ; ++i) {
-//    User usuario;
-//    EEPROM.get(address, usuario);
-//    Serial.print("ID: ");
-//    Serial.print(usuario.color);
-//    Serial.print(" Contrasenia: ");
-//    Serial.println(usuario.name);
-//
-//    address += sizeof(User);
-//  }
+  EEPROM.put(0, 0);
 }
 
 void loop()
@@ -83,22 +48,29 @@ void loop()
   char code = keypad.getKey();
   if (code != NO_KEY)
   {
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print("PASSWORD:");
-    lcd.setCursor(7, 1);
-    lcd.print(" ");
-    lcd.setCursor(7, 1);
-    pass[currentposition] = code;
-    for (l = 0; l <= currentposition; ++l)
+    if (code != 'E' )
     {
-      lcd.print(pass[l]);
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("PASSWORD:");
+      lcd.setCursor(7, 1);
+      lcd.print(" ");
+      lcd.setCursor(7, 1);
+      pass[currentposition] = code;
+      for (l = 0; l <= currentposition; ++l)
+      {
+        lcd.print(pass[l]);
+      }
+      ++currentposition;
     }
-    ++currentposition;
-    if (currentposition == 4)
+    else
     {
       // Área para verificar si pertenece a la matriz.
-      if (verificarPass())
+      if (strncmp(pass, "0000", 4 ) == 0)
+      {
+        addNewUser();
+      }
+      else if (verificarPass())
       {
         correct();
         invalidcount = 0;
@@ -154,28 +126,28 @@ void correct()
   displayscreen();
 }
 
-///*
-//   Metodo que recupera el numero de usuarios registrados en el sistema
-//   de la memeria EEPROM del arduino, la cual serian las primeras dos posiciones
-//*/
-//int contadorUsuarios() {
-//  int nUsuarios;
-//  EEPROM.get(0, nUsuarios);
-//  return nUsuarios;
-//}
-///*
-//   Metodo para insertar un nuevo usuario del sistema a la memoria EEPROM
-//*/
-//void addUser(User usuario) {
-//  //Ingresamos el nuevo usuario
-//  int nUsuarios = contadorUsuarios();
-//  int index = nUsuarios * sizeof(User) + 2;
-//  EEPROM.put(index, usuario);
-//  //Aumentamos el contador de usuarios
-//  nUsuarios++;
-//  EEPROM.put(0, nUsuarios);
-//}
+/*
+   Metodo que recupera el numero de usuarios registrados en el sistema
+   de la memeria EEPROM del arduino, la cual serian las primeras dos posiciones
+*/
+int contadorUsuarios() {
+  int nUsuarios;
+  EEPROM.get(0, nUsuarios);
+  return nUsuarios;
+}
 
+/*
+   Metodo para insertar un nuevo usuario del sistema a la memoria EEPROM
+*/
+void addUser(User usuario) {
+  //Ingresamos el nuevo usuario
+  int nUsuarios = contadorUsuarios();
+  int index = nUsuarios * sizeof(User) + 2;
+  EEPROM.put(index, usuario);
+  //Aumentamos el contador de usuarios
+  nUsuarios++;
+  EEPROM.put(0, nUsuarios);
+}
 
 void displayscreen()
 {
@@ -190,4 +162,127 @@ bool verificarPass() {
     }
   }
   return true;
+}
+
+void addNewUser()
+{
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("PASS:");
+  lcd.setCursor(0, 1);
+  char newPass[8] = {'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0'};
+  char newConfirm[8] = {'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0'};
+  int count = 0;
+  while (true)
+  {
+    char code = keypad.getKey();
+    if (code != NO_KEY)
+    {
+      if (code == 'E')
+      {
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("CONFIRMAR:");
+        lcd.setCursor(0, 1);
+
+        int confirmCount = 0;
+        while (confirmCount < 8)
+        {
+          code = keypad.getKey();
+          if (code != NO_KEY)
+          {
+            if (code == 'E')break;
+            newConfirm[confirmCount] = code;
+            lcd.print(code);
+            confirmCount++;
+          }
+        }
+        delay(1000);
+        bool match = (strncmp(newPass, newConfirm, 8) == 0);
+        if (match)
+        {
+          //Pedir autorización del gerente.
+          lcd.clear();
+          lcd.setCursor(0, 0);
+          lcd.print("GERENTE:");
+          lcd.setCursor(0, 1);
+          confirmCount = 0;
+          char bossPass[4];
+          while (confirmCount < 4)
+          {
+            code = keypad.getKey();
+            if (code != NO_KEY)
+            {
+              bossPass[confirmCount] = code;
+              lcd.print(code);
+              confirmCount++;
+            }
+          }
+          bool autorized = (strncmp(bossPass, password, 4) == 0);
+
+          if (autorized)
+          {
+            lcd.clear();
+            lcd.setCursor(0, 0);
+            lcd.print("AUTORIZADA");
+            delay(2000);
+            
+            //Imprimir nuevo codigo de usuario
+            lcd.clear();
+            lcd.setCursor(0, 0);
+            lcd.print("USUARIO:");
+            lcd.setCursor(0, 1);
+            int newCode = contadorUsuarios();
+            lcd.println(String(newCode));
+            delay(2000);
+
+            //Imprimir su contraseña
+            lcd.clear();
+            lcd.setCursor(0, 0);
+            lcd.print("PASS:");
+            lcd.setCursor(0, 1);
+            lcd.println(String(newPass));
+            delay(2000);
+            
+            //Agregarlo a la EEPROM
+            User newUser = {(int)newCode, (long)newPass};
+            addUser(newUser);
+          }
+          else
+          {
+            lcd.clear();
+            lcd.setCursor(0, 0);
+            lcd.print("NO AUTORIZADA");
+            delay(2000);
+          }
+        }
+        else
+        {
+          lcd.clear();
+          lcd.setCursor(0, 0);
+          lcd.print("PASS NO COINCIDE");
+          delay(2000);
+        }
+        //Romper el ciclo
+        break;
+      }
+      else if (count >= 8)
+      {
+        lcd.clear();
+        lcd.setCursor(0, 0);
+        lcd.print("PASS MAX DE 8");
+        delay(2000);
+        break;
+      }
+      else
+      {
+        //Almacenar en newPass el caracter deseado.
+        newPass[count] = code;
+        count++;
+        //Imprimir la contraseña.
+        lcd.print(code);
+      }
+    }
+  }
+  lcd.clear();
 }
