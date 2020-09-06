@@ -27,9 +27,6 @@ bool buzzer = false;
 #define CLAB1 38
 #define CLAB2 40
 
-#define LB1M 42
-#define LB2M 44
-
 //Motores Stepper banda transportadora
 #define SI1 22
 #define SI2 24
@@ -43,8 +40,8 @@ bool buzzer = false;
 
 #define LEDLAB1 44
 #define LEDLAB2 41
-#define LEDLAB3 39
-#define LEDLAB4 37
+#define EE 39
+#define SC 37
 
 int direccion;
 
@@ -99,6 +96,8 @@ byte check[8] = {
   B00000
 };
 
+byte luces[4] = {false, false, false, false};
+
 void setup() {
   //Stepper 1
   pinMode(lb1A, OUTPUT);
@@ -116,11 +115,12 @@ void setup() {
   pinMode(CLAB1, INPUT);
   pinMode(CLAB2, INPUT);
 
-  //Mandar
-  pinMode(LB1M, INPUT);
-  pinMode(LB2M, INPUT);
-
   //LCD
+  lcd.createChar(0, check);
+  lcd.createChar(1, carita);
+  lcd.createChar(2, candado);
+  lcd.createChar(3, ampersand);
+
   lcd.begin(16, 2);//Columnas y filas de la pantalla
   lcd.print("Proyecto 1");//Print a message to the LCD.
   lcd.setCursor(0, 1);
@@ -143,6 +143,11 @@ void setup() {
   pinMode(BOTONCERRAR, INPUT);
   pinMode(BUZZER, OUTPUT);
 
+  pinMode(LEDLAB1, OUTPUT);
+  pinMode(LEDLAB2, OUTPUT);
+  pinMode(EE, OUTPUT);
+  pinMode(SC, OUTPUT);
+
   servoMotor.attach(SERVO);
 
   servoMotor.write(0);
@@ -151,10 +156,6 @@ void setup() {
   direccion = 0;
 
   Serial.begin(9600);
-
-  /*lcd.createChar(0, check);
-    lcd.begin(16, 2);
-    lcd.write((byte)0);*/
 }
 
 void loop() {
@@ -232,6 +233,36 @@ void loop() {
       }
     } else if (text == "pon" || text == "poff") {
       porton(text);
+    } else if (text == "luzlab1") {
+      luces[0] = !luces[0];
+      digitalWrite(LEDLAB1, luces[0]);
+    } else if (text == "luzlab2") {
+      luces[1] = !luces[1];
+      digitalWrite(LEDLAB2, luces[1]);
+    } else if (text == "luzEE") {
+      luces[2] = !luces[2];
+      digitalWrite(EE, luces[2]);
+    } else if (text == "luzSC") {
+      luces[3] = !luces[3];
+      digitalWrite(SC, luces[3]);
+    }else if (text == "luzallon") {
+      for(int u = 0; u<4; u++){
+        luces[u] = true;
+      }
+      
+      digitalWrite(LEDLAB1, luces[0]);
+      digitalWrite(LEDLAB2, luces[1]);
+      digitalWrite(EE, luces[2]);
+      digitalWrite(SC, luces[3]);
+    }else if (text == "luzalloff") {
+      for(int u = 0; u<4; u++){
+        luces[u] = false;
+      }
+      
+      digitalWrite(LEDLAB1, luces[0]);
+      digitalWrite(LEDLAB2, luces[1]);
+      digitalWrite(EE, luces[2]);
+      digitalWrite(SC, luces[3]);
     }
     else {
       //no se hace nada
@@ -249,7 +280,7 @@ void bandamsg(int c, String op) {
     case 1: {
         lcd.setCursor(0, 0);
         lcd.print("");
-        lcd.print("Poner muestra");
+        lcd.print("Poner muestra   ");
         lcd.setCursor(0, 1);
         lcd.print("");
         lcd.print("en la banda lab" + op);
@@ -258,7 +289,7 @@ void bandamsg(int c, String op) {
     case 2: {
         lcd.setCursor(0, 0);
         lcd.print("");
-        lcd.print("Hay muestra");
+        lcd.print("Hay muestra     ");
         lcd.setCursor(0, 1);
         lcd.print("");
         lcd.print("en la banda lab" + op);
@@ -341,6 +372,21 @@ void porton(String text) {
   int leer = digitalRead(BOTONSERVO);
 
   if (text == "pon") {
+    lcd.setCursor(0, 0);
+    lcd.print("                ");
+    lcd.setCursor(0, 1);
+    lcd.print("                ");
+    lcd.setCursor(0, 0);
+    lcd.write((byte)0);//check
+    lcd.write((byte)3);//ampersand
+    lcd.print("ControlPorton");
+    lcd.write((byte)3);
+    lcd.setCursor(0, 1);
+    lcd.write((byte)2);//candado
+    lcd.write((byte)1);//carita
+    lcd.print("Abriendo");
+    lcd.write((byte)1);//carita
+
     for (int i = 0; i <= 359; i++)
     {
       servoMotor.write(i);
@@ -355,8 +401,8 @@ void porton(String text) {
     bool boton = false;
     tiempoSubida = millis();
 
-    while (millis() - tiempoSubida < 7000 &&  text != "poff") {
-      text ="";
+    while (millis() - tiempoSubida < 10000 &&  text != "poff") {
+      text = "";
       while (Serial.available()) {
         delay(10);
         char c = Serial.read();
@@ -367,11 +413,24 @@ void porton(String text) {
       }
     }
 
-
     for (int i = 359; i >= 0; i--)
     {
       servoMotor.write(i);
     }
+    lcd.setCursor(0, 0);
+    lcd.print("                ");
+    lcd.setCursor(0, 1);
+    lcd.print("                ");
+    lcd.setCursor(0, 0);
+    lcd.write((byte)0);//check
+    lcd.write((byte)3);//ampersand
+    lcd.print("ControlPorton");
+    lcd.write((byte)3);
+    lcd.setCursor(0, 1);
+    lcd.write((byte)2);//candado
+    lcd.write((byte)1);//carita
+    lcd.print("Cerrando");
+    lcd.write((byte)1);//carita
     delay(3000);
     long tiempoBuzzer = millis();
     ejecuto = false;
