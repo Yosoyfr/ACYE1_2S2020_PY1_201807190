@@ -39,6 +39,10 @@ void setup()
   lcd.begin(16, 2);
   //Configuracion de un boton reset system
   pinMode(13, INPUT);
+  //Configuracion de pines para mostrar contraseña correcta o incorrecta
+  pinMode(12, OUTPUT);
+  pinMode(11, OUTPUT);
+  pinMode(10, OUTPUT);
   showUsers();
 }
 
@@ -110,17 +114,76 @@ void clearEEPROM()
 
 void incorrect()
 {
-  memset(pass, '\0', 4);
+  //Imprimir mensaje de pass incorrecto
   lcd.clear();
-  lcd.setCursor(1, 0);
-  lcd.print("PASS");
-  lcd.setCursor(6, 0);
-  lcd.print("INCORRECTO");
-  lcd.setCursor(15, 1);
-  lcd.println(" ");
+  lcd.setCursor(0, 0);
+  lcd.print("PASS INCORRECTO");
   delay(2000);
+
+  // Verificar si la cuenta es más de 4 bloquear.
+  if (invalidcount == 4)
+  {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.println("Sistema bloqueado,");
+    lcd.setCursor(0, 1);
+    lcd.println("avise al gerente.");
+    //Generar tono en buzzer por 5 segundos.
+    digitalWrite(10, HIGH);
+    digitalWrite(11, HIGH);
+    delay(5000);
+    digitalWrite(10, LOW);
+    digitalWrite(11, LOW);
+    //Pedir autorización del gerente.
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("GERENTE:");
+    lcd.setCursor(0, 1);
+    int confirmCount = 0;
+    char bossPass[4];
+    while (true)
+    {
+      char code = keypad.getKey();
+      if (code != NO_KEY)
+      {
+        if (code != 'E' && confirmCount < 4)
+        {
+          bossPass[confirmCount] = code;
+          lcd.print(code);
+          confirmCount++;
+        }
+        else
+        {
+          if (strncmp(bPassword, bossPass, 4) == 0)
+          {
+            // Desbloquear el sistema.
+            lcd.clear();
+            lcd.setCursor(0, 0);
+            lcd.print("DESBLOQUEADO");
+            delay(2000);
+            invalidcount = 0;
+            break;
+          }
+          else
+          {
+            lcd.clear();
+            lcd.setCursor(0, 0);
+            lcd.print("INCORRECTO");
+            delay(2000);
+
+            //Pedir autorización del gerente de nuevo.
+            lcd.clear();
+            lcd.setCursor(0, 0);
+            lcd.print("GERENTE:");
+            lcd.setCursor(0, 1);
+            memset(bossPass, '\0', 4);
+            confirmCount = 0;
+          }
+        }
+      }
+    }
+  }
   lcd.clear();
-  displayscreen();
 }
 
 void correct()
@@ -132,9 +195,13 @@ void correct()
   lcd.print("CORRECTO");
   lcd.setCursor(15, 1);
   lcd.println(" ");
+  digitalWrite(12, HIGH);
+  digitalWrite(10, HIGH);
   delay(2000);
   lcd.clear();
   displayscreen();
+  digitalWrite(12, LOW);
+  digitalWrite(10, LOW);
 }
 
 /*
@@ -192,7 +259,7 @@ bool verificarPass() {
       }
     }
   }
-  delay(2000);  
+  delay(2000);
   return usersLogin(String(uss).toInt(), atol(pass));
 }
 
