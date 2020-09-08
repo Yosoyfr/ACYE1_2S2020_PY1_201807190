@@ -123,8 +123,7 @@ char* bPassword = "0106";//Esta variable será util para ver si el jefe autoriza
 char uss[4] = {'\0', '\0', '\0', '\0'};
 char pass[8] = {'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0'};
 int currentposition = 0;
-int invalidcount = 12;
-bool passInput = false, usrInput = true;
+int invalidcount = 0;
 
 typedef struct  {
   int id;
